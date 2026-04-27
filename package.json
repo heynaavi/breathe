@@ -1,0 +1,40 @@
+{
+  "name": "breathe",
+  "version": "1.0.0",
+  "description": "A 60-second ambient sound bath for your mind",
+  "author": "You",
+  "license": "MIT",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "build": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:all": "electron-builder --mac --win"
+  },
+  "build": {
+    "appId": "com.breathe.app",
+    "productName": "Breathe",
+    "mac": {
+      "category": "public.app-category.healthcare-fitness",
+      "icon": "assets/icons/logo.png",
+      "target": ["dmg", "zip"],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "extendInfo": { "LSUIElement": true }
+    },
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "assets/icons/logo-256.png"
+    },
+    "files": ["main.js", "src/**/*", "assets/**/*"],
+    "extraResources": ["assets/audio/*"]
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  }
+}

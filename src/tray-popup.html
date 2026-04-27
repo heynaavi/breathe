@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Breathe</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased; user-select: none; overflow: hidden;
+    }
+    .popup {
+      background: #0a0a0a; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 1.3rem 1.4rem 1rem;
+      display: flex; flex-direction: column;
+    }
+    .title {
+      font-size: 0.6rem; font-weight: 500; letter-spacing: 0.2em;
+      text-transform: uppercase; color: rgba(255,255,255,0.35);
+      margin-bottom: 1rem;
+    }
+    .stats { display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1rem; }
+    .stat-row { display: flex; justify-content: space-between; align-items: baseline; }
+    .stat-label { font-size: 0.78rem; font-weight: 300; color: rgba(255,255,255,0.5); }
+    .stat-value { font-size: 0.95rem; font-weight: 400; color: #fff; }
+    .divider { height: 1px; background: rgba(255,255,255,0.07); margin: 0 0 0.9rem; }
+    .breath-btn {
+      width: 100%; padding: 0.6rem; background: transparent;
+      border: 1px solid rgba(255,255,255,0.15); color: #fff;
+      font-size: 0.78rem; font-weight: 400; letter-spacing: 0.1em;
+      cursor: pointer; border-radius: 8px; margin-bottom: 0.45rem;
+      transition: border-color 0.2s ease;
+    }
+    .breath-btn:hover { border-color: rgba(255,255,255,0.35); }
+    .quit-btn {
+      width: 100%; padding: 0.3rem; background: transparent; border: none;
+      color: rgba(255,255,255,0.25); font-size: 0.6rem; font-weight: 300;
+      letter-spacing: 0.08em; cursor: pointer; transition: color 0.2s ease;
+    }
+    .quit-btn:hover { color: rgba(255,255,255,0.5); }
+  </style>
+</head>
+<body>
+<div class="popup">
+  <div class="title">your journey</div>
+  <div class="stats">
+    <div class="stat-row">
+      <span class="stat-label">Minutes of calm</span>
+      <span class="stat-value" id="minutes">0</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">It helped</span>
+      <span class="stat-value" id="helped">0 times</span>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <button class="breath-btn" onclick="startBreath()">Take a breath</button>
+  <button class="quit-btn" onclick="quitApp()">Quit</button>
+</div>
+<script>
+  const { ipcRenderer } = require('electron');
+  ipcRenderer.on('init-stats', (_, stats) => {
+    const mins = Math.round(stats.totalSeconds / 60);
+    document.getElementById('minutes').textContent = mins;
+    document.getElementById('helped').textContent =
+      stats.helpedCount === 1 ? '1 time' : `${stats.helpedCount} times`;
+  });
+  function startBreath() { ipcRenderer.send('start-experience'); }
+  function quitApp() { ipcRenderer.send('quit-app'); }
+</script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+node_modules/
+dist/
+build/icon.icns
+build/icon.ico
+
+# Installers & builds
+*.dmg
+*.exe
+*.AppImage
+*.zip
+*.blockmap
+*.snap
+*.deb
+*.rpm
+*.msi
+*.nsis
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp
+*.swo
+
+# Electron
+out/
+
+# Admin dashboard (local only, has API keys)
+admin/
+
+# Blueprint (reference only)
+DESKTOP_APP_BLUEPRINT.md

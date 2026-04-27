@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Welcome to Breathe</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100vw; height: 100vh; overflow: hidden; }
+    body {
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased; user-select: none;
+    }
+    #backdrop {
+      position: fixed; inset: -2px; background: #000; opacity: 0; z-index: 1;
+      transition: opacity 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #backdrop.visible { opacity: 1; }
+    #logoWrap {
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -50%); z-index: 3;
+    }
+    #logo {
+      width: 80px; height: 80px; border-radius: 18px; display: block;
+      opacity: 0; transform: scale(0.7);
+      filter: invert(1) brightness(2);
+      transition: opacity 2s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #logo.visible { opacity: 1; transform: scale(1); }
+    #toast {
+      position: fixed; z-index: 4;
+      background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; padding: 0.7rem 1.2rem;
+      color: rgba(255,255,255,0.8); font-size: 0.8rem;
+      font-weight: 300; letter-spacing: 0.04em;
+      opacity: 0; transform: translateY(4px);
+      transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    }
+    #toast.visible { opacity: 1; transform: translateY(0); }
+    #tagline {
+      position: fixed; top: calc(50% + 60px); left: 50%;
+      transform: translateX(-50%); z-index: 3;
+      font-size: 1.1rem; font-weight: 300; letter-spacing: 0.03em;
+      color: rgba(255,255,255,0.7); opacity: 0;
+      transition: opacity 2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #tagline.visible { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div id="backdrop"></div>
+  <div id="logoWrap"><img id="logo" src="../assets/icons/logo.png" /></div>
+  <div id="tagline">Let's take a minute</div>
+  <div id="toast">I live here now</div>
+</body>
+</html>
+<script>
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+  async function run() {
+    const backdrop = document.getElementById('backdrop');
+    const logoWrap = document.getElementById('logoWrap');
+    const logo = document.getElementById('logo');
+    const toast = document.getElementById('toast');
+    const tagline = document.getElementById('tagline');
+
+    await sleep(200);
+    backdrop.classList.add('visible');
+    await sleep(2000);
+
+    logo.classList.add('visible');
+    await sleep(1500);
+
+    tagline.classList.add('visible');
+    await sleep(2500);
+
+    tagline.classList.remove('visible');
+    await sleep(1200);
+
+    const trayBounds = await window.bridge.getTrayBounds();
+    const targetX = trayBounds.x + trayBounds.width / 2;
+    const targetY = trayBounds.y + trayBounds.height / 2;
+
+    logo.style.transition = 'width 1.4s cubic-bezier(0.4,0,0.2,1), height 1.4s cubic-bezier(0.4,0,0.2,1), border-radius 1.4s ease';
+    logo.style.width = '24px';
+    logo.style.height = '24px';
+    logo.style.borderRadius = '6px';
+
+    logoWrap.style.transition = 'top 1.4s cubic-bezier(0.4,0,0.2,1), left 1.4s cubic-bezier(0.4,0,0.2,1)';
+    logoWrap.style.top = targetY + 'px';
+    logoWrap.style.left = targetX + 'px';
+    await sleep(1600);
+
+    logo.style.transition = 'opacity 0.5s ease';
+    logo.style.opacity = '0';
+    await sleep(600);
+
+    toast.style.top = (trayBounds.y + trayBounds.height + 12) + 'px';
+    toast.style.left = (targetX - 55) + 'px';
+    toast.classList.add('visible');
+    await sleep(3500);
+
+    toast.classList.remove('visible');
+    await sleep(1200);
+    backdrop.classList.remove('visible');
+    await sleep(2200);
+    window.bridge.endOnboarding();
+  }
+  run();
+</script>
