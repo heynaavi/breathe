@@ -96,7 +96,8 @@
       "assets/**/*"
     ],
     "extraResources": [
-      "assets/audio/*"
+      "assets/audio/*",
+      "assets/gong.mp3"
     ]
   },
   "dependencies": {},

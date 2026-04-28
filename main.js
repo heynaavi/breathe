@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen, Tray, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, Tray, nativeImage, globalShortcut } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -13,6 +13,11 @@ let onboardingWindow = null;
 
 const SUPABASE_URL = 'https://uusdrkboviwobxxgzrkl.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1c2Rya2Jvdml3b2J4eGd6cmtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyOTExNzksImV4cCI6MjA5Mjg2NzE3OX0.dx4ZeiQ1sTWq1vmRuddiVp0y9laeIDJLHCoSiOeiXg8';
+
+// ── App paths helper ──
+function getRootPath() {
+  return app.isPackaged ? path.dirname(app.getPath('exe')) : __dirname;
+}
 
 // ── Local stats ──
 function getStatsPath() { return path.join(app.getPath('userData'), 'stats.json'); }
@@ -29,6 +34,24 @@ function saveStats(stats) {
   try {
     fs.mkdirSync(path.dirname(getStatsPath()), { recursive: true });
     fs.writeFileSync(getStatsPath(), JSON.stringify(stats, null, 2));
+  } catch (_) {}
+}
+
+// ── User prefs ──
+function getPrefsPath() { return path.join(app.getPath('userData'), 'prefs.json'); }
+
+function loadPrefs() {
+  try {
+    if (fs.existsSync(getPrefsPath()))
+      return JSON.parse(fs.readFileSync(getPrefsPath(), 'utf8'));
+  } catch (_) {}
+  return { volume: 0.8, duration: 60, shortcut: 'CommandOrControl+Shift+B' };
+}
+
+function savePrefs(prefs) {
+  try {
+    fs.mkdirSync(path.dirname(getPrefsPath()), { recursive: true });
+    fs.writeFileSync(getPrefsPath(), JSON.stringify(prefs, null, 2));
   } catch (_) {}
 }
 
@@ -52,7 +75,6 @@ let geoCache = null;
 async function getGeo() {
   if (geoCache) return geoCache;
   try {
-    // Try ip-api.com first (no key needed, 45 req/min)
     const res = await fetch('http://ip-api.com/json/?fields=countryCode,region');
     if (res.ok) {
       const data = await res.json();
@@ -61,7 +83,6 @@ async function getGeo() {
     }
   } catch (_) {}
   try {
-    // Fallback to ipapi.co
     const res = await fetch('https://ipapi.co/json/');
     if (res.ok) {
       const data = await res.json();
@@ -75,7 +96,8 @@ async function getGeo() {
 
 // ── Tray ──
 function createTray() {
-  const iconPath = path.join(__dirname, 'assets', 'icons', 'trray-icon.png');
+  const rootPath = getRootPath();
+  const iconPath = path.join(rootPath, 'assets', 'icons', 'trray-icon.png');
   let icon;
   if (fs.existsSync(iconPath)) {
     icon = nativeImage.createFromPath(iconPath);
@@ -98,7 +120,7 @@ function toggleTrayPopup() {
 
   const trayBounds = tray.getBounds();
   const popupWidth = 250;
-  const popupHeight = 230;
+  const popupHeight = 320;
   let x = Math.round(trayBounds.x + trayBounds.width / 2 - popupWidth / 2);
   let y = process.platform === 'darwin'
     ? trayBounds.y + trayBounds.height + 4
@@ -128,13 +150,14 @@ function startExperience() {
   if (trayPopup) { trayPopup.close(); trayPopup = null; }
 
   const { bounds } = screen.getPrimaryDisplay();
+  const rootPath = getRootPath();
   experienceWindow = new BrowserWindow({
     x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height,
     frame: false, transparent: true, hasShadow: false,
     alwaysOnTop: true, skipTaskbar: true, resizable: false,
     movable: false, show: false, roundedCorners: false,
     webPreferences: {
-      preload: path.join(__dirname, 'src', 'preload.js'),
+      preload: path.join(rootPath, 'src', 'preload.js'),
       backgroundThrottling: false,
     },
   });
@@ -161,19 +184,16 @@ ipcMain.on('send-feedback', async (_, data) => {
   const deviceId = getDeviceId();
   const geo = await getGeo();
 
-  // Update local stats
   const stats = loadStats();
   stats.totalSessions++;
   stats.totalSeconds += (durationSeconds || 60);
   if (helped) stats.helpedCount++;
   saveStats(stats);
 
-  // Send to Supabase
-  fetch(`${SUPABASE_URL}/rest/v1/sessions`, {
+  fetch(`${SUPABASE_URL}/functions/v1/log-session`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'apikey': SUPABASE_KEY,
       'Authorization': `Bearer ${SUPABASE_KEY}`,
     },
     body: JSON.stringify({
@@ -185,11 +205,15 @@ ipcMain.on('send-feedback', async (_, data) => {
       region_code: geo.region,
     }),
   }).then(res => {
-    if (!res.ok) console.error('[Supabase] Insert failed:', res.status);
-  }).catch(err => console.error('[Supabase] Network error:', err.message));
+    if (!res.ok) console.error('[Edge Function] Insert failed:', res.status);
+  }).catch(err => console.error('[Edge Function] Network error:', err.message));
 });
 
 ipcMain.handle('get-stats', () => loadStats());
+
+ipcMain.handle('get-prefs', () => loadPrefs());
+
+ipcMain.on('set-prefs', (_, prefs) => { savePrefs(prefs); });
 
 ipcMain.handle('get-tray-bounds', () => {
   if (tray) return tray.getBounds();
@@ -200,19 +224,33 @@ ipcMain.on('end-onboarding', () => {
   if (onboardingWindow) { onboardingWindow.close(); onboardingWindow = null; }
 });
 
+ipcMain.on('show-onboarding', () => {
+  if (trayPopup) { trayPopup.close(); trayPopup = null; }
+  if (!onboardingWindow) showOnboarding();
+});
+
+ipcMain.handle('get-gong-path', () => {
+  const gongPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'assets', 'gong.mp3')
+    : path.join(__dirname, 'assets', 'gong.mp3');
+  if (fs.existsSync(gongPath)) return gongPath;
+  return null;
+});
+
 function isFirstLaunch() {
   return !fs.existsSync(getStatsPath());
 }
 
 function showOnboarding() {
   const { bounds } = screen.getPrimaryDisplay();
+  const rootPath = getRootPath();
   onboardingWindow = new BrowserWindow({
     x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height,
     frame: false, transparent: true, hasShadow: false,
     alwaysOnTop: true, skipTaskbar: true, resizable: false,
     movable: false, show: false, roundedCorners: false,
     webPreferences: {
-      preload: path.join(__dirname, 'src', 'preload.js'),
+      preload: path.join(rootPath, 'src', 'preload.js'),
       backgroundThrottling: false,
     },
   });
@@ -224,7 +262,6 @@ function showOnboarding() {
   onboardingWindow.once('ready-to-show', () => { onboardingWindow.show(); onboardingWindow.focus(); });
   onboardingWindow.on('closed', () => {
     onboardingWindow = null;
-    // Mark as launched by saving initial stats
     saveStats({ totalSessions: 0, totalSeconds: 0, helpedCount: 0 });
   });
 }
@@ -244,11 +281,40 @@ ipcMain.handle('get-sound-files', () => {
   } catch (_) { return []; }
 });
 
+// ── Shortcut management ──
+function registerShortcut() {
+  globalShortcut.unregisterAll();
+  const prefs = loadPrefs();
+  const shortcut = prefs.shortcut || 'CommandOrControl+Shift+B';
+  try {
+    globalShortcut.register(shortcut, () => {
+      if (!trayPopup && !experienceWindow) {
+        startExperience();
+      }
+    });
+  } catch (_) {
+    // Fallback if custom shortcut is invalid
+    globalShortcut.register('CommandOrControl+Shift+B', () => {
+      if (!trayPopup && !experienceWindow) {
+        startExperience();
+      }
+    });
+  }
+}
+
+ipcMain.on('set-shortcut', (_, shortcut) => {
+  const prefs = loadPrefs();
+  prefs.shortcut = shortcut;
+  savePrefs(prefs);
+  registerShortcut();
+});
+
 // ── App Ready ──
 app.whenReady().then(() => {
   if (process.platform === 'darwin') app.dock.hide();
   createTray();
   getGeo();
+  registerShortcut();
 
   if (isFirstLaunch()) {
     showOnboarding();
@@ -256,3 +322,7 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', (e) => e.preventDefault());
+
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
+});

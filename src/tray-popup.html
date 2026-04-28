@@ -39,6 +39,47 @@
       letter-spacing: 0.08em; cursor: pointer; transition: color 0.2s ease;
     }
     .quit-btn:hover { color: rgba(255,255,255,0.5); }
+    .volume-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .volume-label { font-size: 0.65rem; color: rgba(255,255,255,0.4); width: 2.5rem; }
+    .volume-slider {
+      flex: 1; -webkit-appearance: none; appearance: none;
+      height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px; outline: none;
+    }
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 12px; height: 12px; background: #fff; border-radius: 50%; cursor: pointer;
+    }
+    .shortcut-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 0.75rem; cursor: pointer;
+      padding: 0.35rem 0; border-radius: 6px;
+      transition: background 0.2s ease;
+    }
+    .shortcut-row:hover { background: rgba(255,255,255,0.04); }
+    .shortcut-label { font-size: 0.65rem; color: rgba(255,255,255,0.4); }
+    .shortcut-keys {
+      display: flex; align-items: center; gap: 0.2rem;
+    }
+    .shortcut-key {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 1.3rem; height: 1.1rem; padding: 0 0.3rem;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 4px;
+      font-size: 0.6rem; font-weight: 500;
+      color: rgba(255,255,255,0.5);
+    }
+    .shortcut-listening .shortcut-keys {
+      opacity: 0.4;
+    }
+    .shortcut-listening .shortcut-label {
+      color: rgba(255,255,255,0.6);
+    }
+    .shortcut-hint {
+      font-size: 0.55rem; color: rgba(255,255,255,0.25);
+      text-align: center; margin-bottom: 0.5rem;
+      height: 0.8rem;
+    }
   </style>
 </head>
 <body>
@@ -55,19 +96,147 @@
     </div>
   </div>
   <div class="divider"></div>
+  <div class="volume-row">
+    <span class="volume-label">Volume</span>
+    <input type="range" class="volume-slider" id="volume" min="0" max="100" value="80">
+  </div>
+  <div class="shortcut-row" id="shortcutRow" onclick="startListening()">
+    <span class="shortcut-label" id="shortcutLabel">Shortcut</span>
+    <div class="shortcut-keys" id="shortcutKeys"></div>
+  </div>
+  <div class="shortcut-hint" id="shortcutHint"></div>
   <button class="breath-btn" onclick="startBreath()">Take a breath</button>
   <button class="quit-btn" onclick="quitApp()">Quit</button>
 </div>
 <script>
   const { ipcRenderer } = require('electron');
+  const volumeSlider = document.getElementById('volume');
+  const shortcutRow = document.getElementById('shortcutRow');
+  const shortcutKeys = document.getElementById('shortcutKeys');
+  const shortcutLabel = document.getElementById('shortcutLabel');
+  const shortcutHint = document.getElementById('shortcutHint');
+
+  let listening = false;
+  let currentShortcut = 'CommandOrControl+Shift+B';
+  const isMac = process.platform === 'darwin';
+
+  // Render shortcut as key pills
+  function renderShortcut(shortcut) {
+    const parts = shortcut.split('+');
+    shortcutKeys.innerHTML = parts.map(p => {
+      let display = p;
+      if (p === 'CommandOrControl') display = isMac ? '⌘' : 'Ctrl';
+      else if (p === 'Shift') display = isMac ? '⇧' : 'Shift';
+      else if (p === 'Alt') display = isMac ? '⌥' : 'Alt';
+      else if (p === '…') return `<span class="shortcut-key" style="opacity:0.35">…</span>`;
+      return `<span class="shortcut-key">${display}</span>`;
+    }).join('');
+  }
+
+  function startListening() {
+    if (listening) return;
+    listening = true;
+    shortcutRow.classList.add('shortcut-listening');
+    shortcutHint.textContent = 'press new shortcut…';
+  }
+
+  function stopListening(newShortcut) {
+    listening = false;
+    shortcutRow.classList.remove('shortcut-listening');
+    shortcutHint.textContent = '';
+    if (newShortcut && newShortcut !== currentShortcut) {
+      currentShortcut = newShortcut;
+      renderShortcut(currentShortcut);
+      ipcRenderer.send('set-shortcut', currentShortcut);
+    }
+  }
+
+  // Listen for key combos — show live as keys are pressed
+  document.addEventListener('keydown', (e) => {
+    if (!listening) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Build current modifier state
+    const mods = [];
+    if (e.metaKey || e.ctrlKey) mods.push('CommandOrControl');
+    if (e.shiftKey) mods.push('Shift');
+    if (e.altKey) mods.push('Alt');
+
+    const key = e.code.startsWith('Key') ? e.code.replace('Key', '') :
+                e.code.startsWith('Digit') ? e.code.replace('Digit', '') :
+                e.key.toUpperCase();
+    const ignore = ['META', 'CONTROL', 'SHIFT', 'ALT', 'DEAD', 'CAPSLOCK'];
+
+    if (ignore.includes(key)) {
+      // Still just modifiers — show them live
+      if (mods.length > 0) {
+        renderShortcut(mods.join('+') + '+…');
+      }
+      return;
+    }
+
+    if (mods.length === 0) {
+      shortcutHint.textContent = 'use a modifier key';
+      return;
+    }
+
+    const combo = [...mods, key].join('+');
+    stopListening(combo);
+  });
+
+  // When modifiers are released without a key, reset display
+  document.addEventListener('keyup', (e) => {
+    if (!listening) return;
+    const anyMod = e.metaKey || e.ctrlKey || e.shiftKey || e.altKey;
+    if (!anyMod) {
+      renderShortcut(currentShortcut);
+    }
+  });
+
+  // Click outside cancels listening
+  document.addEventListener('click', (e) => {
+    if (listening && !shortcutRow.contains(e.target)) {
+      stopListening(null);
+    }
+  });
+
   ipcRenderer.on('init-stats', (_, stats) => {
     const mins = Math.round(stats.totalSeconds / 60);
     document.getElementById('minutes').textContent = mins;
     document.getElementById('helped').textContent =
       stats.helpedCount === 1 ? '1 time' : `${stats.helpedCount} times`;
   });
+
+  (async () => {
+    const prefs = await ipcRenderer.invoke('get-prefs');
+    volumeSlider.value = Math.round(prefs.volume * 100);
+    if (prefs.shortcut) currentShortcut = prefs.shortcut;
+    renderShortcut(currentShortcut);
+  })();
+
+  volumeSlider.addEventListener('change', () => {
+    ipcRenderer.send('set-prefs', { volume: volumeSlider.value / 100, duration: 60, shortcut: currentShortcut });
+  });
+
   function startBreath() { ipcRenderer.send('start-experience'); }
   function quitApp() { ipcRenderer.send('quit-app'); }
+
+  // ↑↑↓↓←→←→BA
+  const konami = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+  let konamiPos = 0;
+  document.addEventListener('keydown', (e) => {
+    if (listening) return;
+    if (e.key === konami[konamiPos]) {
+      konamiPos++;
+      if (konamiPos === konami.length) {
+        konamiPos = 0;
+        ipcRenderer.send('show-onboarding');
+      }
+    } else {
+      konamiPos = 0;
+    }
+  });
 </script>
 </body>
 </html>

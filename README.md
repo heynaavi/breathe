@@ -37,7 +37,7 @@ Click the menu bar icon. The rest happens on its own.
 
 | | |
 |:--|:--|
-| 🌑 **Fade** | Screen goes dark. The world disappears. |
+| 🌑 **Fade** | Screen goes dark. A gong rings. The world disappears. |
 | 🎧 **Sound** | A random ambient track plays. Headphones recommended. |
 | 🧘 **Breathe** | Close your eyes. One minute. That's it. |
 | 🫧 **Return** | "Welcome back." Quick feedback. Fade out. |
@@ -48,15 +48,31 @@ Press `Esc` anytime to exit.
 
 ### Menu bar
 
-</text>
-</invoke>
-Your stats live in the tray popup — minutes of calm, sessions completed, and a button to start.
+Your stats and settings live in the tray popup.
 
 | | |
 |:--|:--|
-| ◉ **Sessions** | How many times you've paused |
 | ◉ **Minutes** | Total time spent breathing |
 | ◉ **Helped** | Times it actually slowed you down |
+| 🔊 **Volume** | Adjust ambient audio level |
+| ⌨️ **Shortcut** | Custom global hotkey — click to remap |
+
+Default shortcut: `⌘ Shift B` (mac) · `Ctrl Shift B` (win)
+
+---
+
+### First launch
+
+A cinematic onboarding plays once — logo blooms in, a gong sounds, and the app settles into your menu bar with a gentle "I live here, come take a breath."
+
+---
+
+### Platforms
+
+| | Platform | File |
+|---|----------|------|
+| 🍎 | macOS (Apple Silicon) | `.dmg` |
+| 🪟 | Windows (x64) | `.exe` (portable) |
 
 ---
 
@@ -82,10 +98,11 @@ breathe/
 │   ├── experience.html  # Fullscreen overlay
 │   ├── experience.js    # Session logic + animations
 │   ├── preload.js       # Context bridge
-│   ├── tray-popup.html  # Menu bar popup
-│   └── onboarding.html  # First-launch experience
+│   ├── tray-popup.html  # Menu bar popup + settings
+│   └── onboarding.html  # First-launch cinematic
 ├── assets/
 │   ├── audio/           # Ambient tracks (~1 min each)
+│   ├── gong.mp3         # Onboarding gong
 │   └── icons/           # App + tray icons
 ├── scripts/
 │   ├── release.js       # One-command release

@@ -11,102 +11,265 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
       -webkit-font-smoothing: antialiased; user-select: none;
     }
+
     #backdrop {
       position: fixed; inset: -2px; background: #000; opacity: 0; z-index: 1;
-      transition: opacity 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: opacity 3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     #backdrop.visible { opacity: 1; }
+
     #logoWrap {
       position: fixed; top: 50%; left: 50%;
-      transform: translate(-50%, -50%); z-index: 3;
+      transform: translate(-50%, -50%);
+      z-index: 3;
+      will-change: transform;
     }
+
     #logo {
       width: 100px; height: 100px; border-radius: 22px; display: block;
-      opacity: 0; transform: scale(0.7);
       filter: invert(1) brightness(2);
-      transition: opacity 2s cubic-bezier(0.4, 0, 0.2, 1),
-                  transform 2s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform, opacity;
+      opacity: 0;
+      transform: scale(0.3);
     }
-    #logo.visible { opacity: 1; transform: scale(1); }
+
+    /* Phase 1: Smooth appearance — mirrors the transition curve inverted.
+       No spring overshoot, just a confident ease-in that decelerates gracefully */
+    #logo.entering {
+      animation: logoBloom 2.8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+
+    @keyframes logoBloom {
+      0% {
+        opacity: 0;
+        transform: scale(0.3);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Phase 2: Gentle breathing pulse while visible */
+    #logo.breathing {
+      opacity: 1;
+      animation: logoPulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes logoPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.035); }
+    }
+
+    #tagline {
+      position: fixed; top: calc(50% + 80px); left: 50%;
+      transform: translateX(-50%); z-index: 3;
+      font-size: 1.3rem; font-weight: 300; letter-spacing: 0.04em;
+      color: rgba(255,255,255,0); /* start invisible */
+    }
+
+    #tagline.entering {
+      animation: textFadeIn 2.875s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    #tagline.leaving {
+      animation: textFadeOut 2.07s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    @keyframes textFadeIn {
+      0% { color: rgba(255,255,255,0); transform: translateX(-50%) translateY(10px); }
+      100% { color: rgba(255,255,255,0.7); transform: translateX(-50%) translateY(0); }
+    }
+
+    @keyframes textFadeOut {
+      0% { color: rgba(255,255,255,0.7); transform: translateX(-50%) translateY(0); }
+      100% { color: rgba(255,255,255,0); transform: translateX(-50%) translateY(-6px); }
+    }
+
     #toast {
       position: fixed; z-index: 4;
       background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1);
       border-radius: 10px; padding: 0.7rem 1.2rem;
       color: rgba(255,255,255,0.8); font-size: 0.8rem;
       font-weight: 300; letter-spacing: 0.04em;
-      opacity: 0; transform: translateY(4px);
-      transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1),
-                  transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0; transform: translateY(6px);
+      transition: opacity 1.8s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 1.8s cubic-bezier(0.16, 1, 0.3, 1);
       pointer-events: none;
     }
     #toast.visible { opacity: 1; transform: translateY(0); }
-    #tagline {
-      position: fixed; top: calc(50% + 80px); left: 50%;
-      transform: translateX(-50%); z-index: 3;
-      font-size: 1.3rem; font-weight: 400; letter-spacing: 0.03em;
-      color: rgba(255,255,255,0.7); opacity: 0;
-      transition: opacity 2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    #sparkle {
+      position: absolute; right: -8px; top: -8px;
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.6);
+      opacity: 0;
+      transform: scale(0) rotate(-30deg);
+      pointer-events: none;
+      will-change: transform, opacity;
     }
-    #tagline.visible { opacity: 1; }
+
+    #sparkle.entering {
+      animation: sparkleIn 1.2s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+
+    #sparkle.alive {
+      animation: sparklePulse 2.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    #sparkle.leaving {
+      animation: sparkleOut 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    @keyframes sparkleIn {
+      0% {
+        opacity: 0;
+        transform: scale(0) rotate(-30deg);
+      }
+      60% {
+        opacity: 0.8;
+        transform: scale(1.15) rotate(8deg);
+      }
+      100% {
+        opacity: 0.6;
+        transform: scale(1) rotate(0deg);
+      }
+    }
+
+    @keyframes sparklePulse {
+      0%, 100% {
+        opacity: 0.6;
+        transform: scale(1) rotate(0deg);
+      }
+      50% {
+        opacity: 0.9;
+        transform: scale(1.25) rotate(15deg);
+      }
+    }
+
+    @keyframes sparkleOut {
+      0% {
+        opacity: 0.6;
+        transform: scale(1) rotate(0deg);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(0.3) rotate(-20deg);
+      }
+    }
   </style>
 </head>
 <body>
   <div id="backdrop"></div>
   <div id="logoWrap"><img id="logo" src="../assets/icons/logo.png" /></div>
   <div id="tagline">Let's take a minute</div>
-  <div id="toast">I live here now</div>
+  <div id="toast" style="position:fixed;">I live here, come take a breath<span id="sparkle">✦</span></div>
 </body>
 </html>
 <script>
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  // Gong sound — plays when backdrop finishes fading to black
+  async function playGong() {
+    try {
+      const gongPath = await window.bridge.getGongPath();
+      if (!gongPath) return;
+      const gong = new Audio(`file://${gongPath}`);
+      gong.volume = 0.4;
+      gong.play().catch(() => {});
+    } catch (_) {}
+  }
+
   async function run() {
     const backdrop = document.getElementById('backdrop');
     const logoWrap = document.getElementById('logoWrap');
     const logo = document.getElementById('logo');
     const toast = document.getElementById('toast');
     const tagline = document.getElementById('tagline');
+    const sparkle = document.getElementById('sparkle');
 
-    await sleep(200);
+    // Phase 0: Fade to black
+    await sleep(300);
     backdrop.classList.add('visible');
-    await sleep(2000);
+    await sleep(2800);
 
-    logo.classList.add('visible');
-    await sleep(1500);
+    // Gong as darkness settles
+    playGong();
+    await sleep(800);
 
-    tagline.classList.add('visible');
-    await sleep(2500);
+    // Phase 1: Logo blooms in — organic spring
+    logo.classList.add('entering');
+    await sleep(3000);
 
-    tagline.classList.remove('visible');
-    await sleep(1200);
+    // Phase 1.5: Gentle breathing pulse
+    logo.classList.remove('entering');
+    logo.classList.add('breathing');
+    await sleep(400);
+
+    // Phase 2: Tagline fades in
+    tagline.classList.add('entering');
+    await sleep(3450);
+
+    // Phase 3: Tagline fades out
+    tagline.classList.remove('entering');
+    tagline.classList.add('leaving');
+    await sleep(2070);
+
+    // Phase 4: Logo stops breathing, then floats to tray
+    logo.classList.remove('breathing');
+    logo.style.opacity = '1';
+    logo.style.transform = 'scale(1)';
 
     const trayBounds = await window.bridge.getTrayBounds();
     const targetX = trayBounds.x + trayBounds.width / 2;
     const targetY = trayBounds.y + trayBounds.height / 2;
 
-    logo.style.transition = 'width 1.4s cubic-bezier(0.4,0,0.2,1), height 1.4s cubic-bezier(0.4,0,0.2,1), border-radius 1.4s ease';
-    logo.style.width = '24px';
-    logo.style.height = '24px';
-    logo.style.borderRadius = '6px';
+    // Compute the translation offset instead of animating top/left
+    const wrapRect = logoWrap.getBoundingClientRect();
+    const currentX = wrapRect.left + wrapRect.width / 2;
+    const currentY = wrapRect.top + wrapRect.height / 2;
+    const dx = targetX - currentX;
+    const dy = targetY - currentY;
 
-    logoWrap.style.transition = 'top 1.4s cubic-bezier(0.4,0,0.2,1), left 1.4s cubic-bezier(0.4,0,0.2,1)';
-    logoWrap.style.top = targetY + 'px';
-    logoWrap.style.left = targetX + 'px';
-    await sleep(1600);
+    // Animate everything with transform only — no layout thrash
+    // Cinematic ease: gentle lift-off, smooth glide, soft landing
+    logoWrap.style.transition = 'transform 2.8s cubic-bezier(0.25, 0.1, 0.25, 1)';
+    logo.style.transition = 'transform 2.8s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1) 2.2s';
 
-    logo.style.transition = 'opacity 0.5s ease';
+    logoWrap.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+    logo.style.transform = 'scale(0.22)';
     logo.style.opacity = '0';
-    await sleep(600);
 
+    await sleep(3200);
+
+    // Phase 5: Toast appears near tray with sparkle companion
     toast.style.top = (trayBounds.y + trayBounds.height + 12) + 'px';
     toast.style.left = (targetX - 55) + 'px';
-    toast.classList.add('visible');
-    await sleep(3500);
 
-    toast.classList.remove('visible');
+    toast.classList.add('visible');
+    await sleep(400);
+
+    // Sparkle eases in after toast settles
+    sparkle.classList.add('entering');
     await sleep(1200);
-    backdrop.classList.remove('visible');
+
+    // Sparkle starts its gentle pulse
+    sparkle.classList.remove('entering');
+    sparkle.classList.add('alive');
     await sleep(2200);
+
+    // Sparkle fades out first
+    sparkle.classList.remove('alive');
+    sparkle.classList.add('leaving');
+    await sleep(600);
+
+    // Phase 6: Everything fades, we're done
+    toast.classList.remove('visible');
+    await sleep(1500);
+    backdrop.classList.remove('visible');
+    await sleep(2500);
     window.bridge.endOnboarding();
   }
+
   run();
 </script>

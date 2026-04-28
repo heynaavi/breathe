@@ -158,13 +158,15 @@ beginBtn.addEventListener('click', async () => {
 
 async function startAudio() {
   const files = await window.bridge.getSoundFiles();
+  const prefs = await window.bridge.getPrefs();
+  const volume = prefs.volume || 0.8;
   if (files.length > 0) {
     const randomFile = files[Math.floor(Math.random() * files.length)];
     currentAudioFile = randomFile.split('/').pop().split('\\').pop();
     audio = new Audio(`file://${randomFile}`);
     audio.volume = 0;
     audio.play();
-    fadeAudioIn(audio, 0.8, 5000);
+    fadeAudioIn(audio, volume, 5000);
 
     audio.addEventListener('loadedmetadata', () => {
       if (audio.duration && isFinite(audio.duration)) {
@@ -208,6 +210,7 @@ async function endExperience() {
 async function handleFeedback(helped) {
   const welcomeEl = document.getElementById('feedbackWelcome');
   const bottomEl = document.getElementById('feedbackBottom');
+  const hotkeyHint = document.getElementById('hotkeyHint');
 
   bottomEl.classList.remove('visible');
   await sleep(600);
@@ -221,9 +224,19 @@ async function handleFeedback(helped) {
 
   await sleep(1500);
   await showMessage('See you soon');
+  await sleep(1800);
+
+  // Show hotkey hint after "See you soon" settles
+  hotkeyHint.classList.add('visible');
   await sleep(2500);
-  await hideMessage();
-  await sleep(1200);
+
+  // Fade both out together
+  messageEl.classList.remove('visible');
+  hotkeyHint.classList.add('hiding');
+  await sleep(2000);
+  hotkeyHint.classList.remove('visible');
+  hotkeyHint.classList.remove('hiding');
+  await sleep(800);
 
   backdrop.classList.remove('visible');
   await sleep(1800);
@@ -257,4 +270,12 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Start
+const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+const keyModEl = document.getElementById('keyMod');
+const keyShiftEl = document.getElementById('keyShift');
+if (!isMac) {
+  keyModEl.textContent = 'Ctrl';
+  keyShiftEl.textContent = 'Shift';
+}
+
 startSequence();

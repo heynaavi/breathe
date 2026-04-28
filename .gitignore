@@ -32,3 +32,6 @@ admin/
 
 # Blueprint (reference only)
 DESKTOP_APP_BLUEPRINT.md
+
+# Supabase local
+supabase/
