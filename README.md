@@ -98,7 +98,5 @@ breathe/
 ---
 
 <p align="center">
-  Inspired by <a href="https://stillapp.net/">Still</a>
-  <br>
-  <sub>MIT · take a breath 🫧</sub>
+  <sub>MIT · made with stillness 🫧</sub>
 </p>
