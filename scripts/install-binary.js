@@ -180,6 +180,8 @@ async function main() {
         out('');
         out(`   ${c.dim}github:${c.reset} ${c.lavender}https://github.com/${REPO}${c.reset}`);
         out('');
+        out(`   ${c.dim}your mind called. it wants a minute back.${c.reset}`);
+        out('');        out('');
         return;
       }
     }
@@ -209,6 +211,8 @@ async function main() {
     out(`   ${c.dim}run:${c.reset} ${c.cyan}breathe-a-min${c.reset}`);
     out('');
     out(`   ${c.dim}github:${c.reset} ${c.lavender}https://github.com/${REPO}${c.reset}`);
+    out('');
+    out(`   ${c.dim}your mind called. it wants its minute back.${c.reset}`);
     out('');
   } catch (err) {
     // Cleanup on failure
