@@ -207,7 +207,7 @@ async function main() {
     step('building app');
     info('this may take a few minutes...');
     console.log('');
-    run('npx electron-builder --mac dmg zip');
+    run('npx electron-builder --mac dmg zip --win portable --x64');
     console.log('');
     done('build complete');
   }
