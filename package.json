@@ -2,15 +2,44 @@
   "name": "breathe",
   "version": "1.0.0",
   "description": "A 60-second ambient sound bath for your mind",
-  "author": "You",
+  "author": "Naveen <personal.navi93@gmail.com> (https://github.com/heynaavi)",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/heynaavi/breathe.git"
+  },
+  "homepage": "https://github.com/heynaavi/breathe",
+  "keywords": [
+    "breathe",
+    "meditation",
+    "mindfulness",
+    "ambient",
+    "menu-bar",
+    "electron",
+    "desktop"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "main": "main.js",
+  "bin": {
+    "breathe": "bin/breathe.js"
+  },
+  "files": [
+    "bin/",
+    "scripts/",
+    "README.md"
+  ],
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
+    "postinstall": "node scripts/postinstall.js",
     "build": "electron-builder --mac",
+    "build:dmg": "electron-builder --mac dmg",
+    "build:zip": "electron-builder --mac zip",
     "build:win": "electron-builder --win",
-    "build:all": "electron-builder --mac --win"
+    "build:all": "electron-builder --mac --win",
+    "release": "node scripts/release.js"
   },
   "build": {
     "appId": "com.breathe.app",
@@ -18,19 +47,57 @@
     "mac": {
       "category": "public.app-category.healthcare-fitness",
       "icon": "assets/icons/logo.png",
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
-      "extendInfo": { "LSUIElement": true }
+      "extendInfo": {
+        "LSUIElement": true
+      }
+    },
+    "dmg": {
+      "title": "Breathe",
+      "backgroundColor": "#0a0a0a",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     },
     "win": {
-      "target": ["nsis", "portable"],
+      "target": [
+        "nsis",
+        "portable"
+      ],
       "icon": "assets/icons/logo-256.png"
     },
-    "files": ["main.js", "src/**/*", "assets/**/*"],
-    "extraResources": ["assets/audio/*"]
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Breathe"
+    },
+    "files": [
+      "main.js",
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "extraResources": [
+      "assets/audio/*"
+    ]
   },
   "dependencies": {},
   "devDependencies": {

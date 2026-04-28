@@ -52,12 +52,24 @@ let geoCache = null;
 async function getGeo() {
   if (geoCache) return geoCache;
   try {
+    // Try ip-api.com first (no key needed, 45 req/min)
+    const res = await fetch('http://ip-api.com/json/?fields=countryCode,region');
+    if (res.ok) {
+      const data = await res.json();
+      geoCache = { country: data.countryCode || null, region: data.region || null };
+      return geoCache;
+    }
+  } catch (_) {}
+  try {
+    // Fallback to ipapi.co
     const res = await fetch('https://ipapi.co/json/');
-    const data = await res.json();
-    geoCache = { country: data.country_code || null, region: data.region_code || null };
-  } catch (_) {
-    geoCache = { country: null, region: null };
-  }
+    if (res.ok) {
+      const data = await res.json();
+      geoCache = { country: data.country_code || null, region: data.region_code || null };
+      return geoCache;
+    }
+  } catch (_) {}
+  geoCache = { country: null, region: null };
   return geoCache;
 }
 
@@ -172,7 +184,9 @@ ipcMain.on('send-feedback', async (_, data) => {
       country_code: geo.country,
       region_code: geo.region,
     }),
-  }).catch(() => {});
+  }).then(res => {
+    if (!res.ok) console.error('[Supabase] Insert failed:', res.status);
+  }).catch(err => console.error('[Supabase] Network error:', err.message));
 });
 
 ipcMain.handle('get-stats', () => loadStats());
