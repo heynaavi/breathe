@@ -178,6 +178,8 @@ async function main() {
         out(`   ${c.green}◉${c.reset}  already installed ${c.dim}v${VERSION}${c.reset}`);
         out(`   ${c.dim}run:${c.reset} ${c.cyan}breathe-a-min${c.reset}`);
         out('');
+        out(`   ${c.dim}github:${c.reset} ${c.lavender}https://github.com/${REPO}${c.reset}`);
+        out('');
         return;
       }
     }
@@ -205,6 +207,8 @@ async function main() {
     out('');
     out(`   ${c.green}◉${c.reset}  installed ${c.dim}→ ~/.breathe${c.reset}`);
     out(`   ${c.dim}run:${c.reset} ${c.cyan}breathe-a-min${c.reset}`);
+    out('');
+    out(`   ${c.dim}github:${c.reset} ${c.lavender}https://github.com/${REPO}${c.reset}`);
     out('');
   } catch (err) {
     // Cleanup on failure
