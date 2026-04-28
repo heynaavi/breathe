@@ -11,12 +11,47 @@ let experienceWindow = null;
 let trayPopup = null;
 let onboardingWindow = null;
 
+// Supabase anon key — safe to be public, RLS policies control access
 const SUPABASE_URL = 'https://uusdrkboviwobxxgzrkl.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1c2Rya2Jvdml3b2J4eGd6cmtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyOTExNzksImV4cCI6MjA5Mjg2NzE3OX0.dx4ZeiQ1sTWq1vmRuddiVp0y9laeIDJLHCoSiOeiXg8';
 
 // ── App paths helper ──
-function getRootPath() {
-  return app.isPackaged ? path.dirname(app.getPath('exe')) : __dirname;
+function getAssetPath(...parts) {
+  return path.join(__dirname, ...parts);
+}
+
+function getResourcePath(...parts) {
+  if (app.isPackaged) return path.join(process.resourcesPath, ...parts);
+  return path.join(__dirname, ...parts);
+}
+
+// ── Update checker ──
+const REPO = 'heynaavi/breathe';
+const CURRENT_VERSION = require('./package.json').version;
+let updateAvailable = null; // { version, url } or null
+
+async function checkForUpdates() {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const latest = (data.tag_name || '').replace(/^v/, '');
+    if (latest && latest !== CURRENT_VERSION && isNewer(latest, CURRENT_VERSION)) {
+      updateAvailable = { version: latest, url: data.html_url };
+      // Notify tray popup if open
+      if (trayPopup) trayPopup.webContents.send('update-available', updateAvailable);
+    }
+  } catch (_) {}
+}
+
+function isNewer(a, b) {
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    if ((pa[i] || 0) > (pb[i] || 0)) return true;
+    if ((pa[i] || 0) < (pb[i] || 0)) return false;
+  }
+  return false;
 }
 
 // ── Local stats ──
@@ -96,17 +131,17 @@ async function getGeo() {
 
 // ── Tray ──
 function createTray() {
-  const rootPath = getRootPath();
-  const iconPath = path.join(rootPath, 'assets', 'icons', 'trray-icon.png');
+  const iconPath = path.join(__dirname, 'assets', 'icons', 'trray-icon.png');
   let icon;
   if (fs.existsSync(iconPath)) {
     icon = nativeImage.createFromPath(iconPath);
-    icon.setTemplateImage(true);
   } else {
-    const canvas = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAMlJREFUWEft1rENwjAQBdD/DZCSA0awBBNQsAIjsAQlOUBKNkBiAhZgBJagYAVGYAkKcoBIkSxZsnN3cWHJ9v/3/ewYGPl4I+fHfwHsAJwBnABcADz6AnYVcABwA3Cv5l8APgG8+wJqAFMAMwDzKv8N4APAqy+gBjABMAWwqPJfAN4AvPoC/gDGAKYAFlX+C8AbgFdfwB/AGMAEwLLKfwF4B/DqC6gBjAFMAKyq/BeANwCvvoAawAjAGMCmyn8BeAPw6gv4AUGiSCHGOWatAAAAAElFTkSuQmCC`;
-    icon = nativeImage.createFromDataURL(canvas);
-    icon.setTemplateImage(true);
+    icon = nativeImage.createFromDataURL(
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAMlJREFUWEft1rENwjAQBdD/DZCSA0awBBNQsAIjsAQlOUBKNkBiAhZgBJagYAVGYAkKcoBIkSxZsnN3cWHJ9v/3/ewYGPl4I+fHfwHsAJwBnABcADz6AnYVcABwA3Cv5l8APgG8+wJqAFMAMwDzKv8N4APAqy+gBjABMAWwqPJfAN4AvPoC/gDGAKYAFlX+C8AbgFdfwB/AGMAEwLLKfwF4B/DqC6gBjAFMAKyq/BeANwCvvoAawAjAGMCmyn8BeAPw6gv4AUGiSCHGOWatAAAAAElFTkSuQmCC'
+    );
   }
+  // Template image lets macOS auto-tint for light/dark menu bar
+  icon.setTemplateImage(true);
   tray = new Tray(icon);
   tray.setToolTip('Breathe — Take a moment');
   tray.on('click', () => toggleTrayPopup());
@@ -120,7 +155,7 @@ function toggleTrayPopup() {
 
   const trayBounds = tray.getBounds();
   const popupWidth = 250;
-  const popupHeight = 320;
+  const popupHeight = 340;
   let x = Math.round(trayBounds.x + trayBounds.width / 2 - popupWidth / 2);
   let y = process.platform === 'darwin'
     ? trayBounds.y + trayBounds.height + 4
@@ -139,6 +174,7 @@ function toggleTrayPopup() {
     trayPopup.show();
     const stats = loadStats();
     trayPopup.webContents.send('init-stats', stats);
+    trayPopup.webContents.send('init-version', { currentVersion: CURRENT_VERSION, update: updateAvailable });
   });
   trayPopup.on('blur', () => { if (trayPopup) { trayPopup.close(); trayPopup = null; } });
   trayPopup.on('closed', () => { trayPopup = null; });
@@ -150,14 +186,13 @@ function startExperience() {
   if (trayPopup) { trayPopup.close(); trayPopup = null; }
 
   const { bounds } = screen.getPrimaryDisplay();
-  const rootPath = getRootPath();
   experienceWindow = new BrowserWindow({
     x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height,
     frame: false, transparent: true, hasShadow: false,
     alwaysOnTop: true, skipTaskbar: true, resizable: false,
     movable: false, show: false, roundedCorners: false,
     webPreferences: {
-      preload: path.join(rootPath, 'src', 'preload.js'),
+      preload: path.join(__dirname, 'src', 'preload.js'),
       backgroundThrottling: false,
     },
   });
@@ -243,14 +278,13 @@ function isFirstLaunch() {
 
 function showOnboarding() {
   const { bounds } = screen.getPrimaryDisplay();
-  const rootPath = getRootPath();
   onboardingWindow = new BrowserWindow({
     x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height,
     frame: false, transparent: true, hasShadow: false,
     alwaysOnTop: true, skipTaskbar: true, resizable: false,
     movable: false, show: false, roundedCorners: false,
     webPreferences: {
-      preload: path.join(rootPath, 'src', 'preload.js'),
+      preload: path.join(__dirname, 'src', 'preload.js'),
       backgroundThrottling: false,
     },
   });
@@ -309,12 +343,30 @@ ipcMain.on('set-shortcut', (_, shortcut) => {
   registerShortcut();
 });
 
+ipcMain.handle('get-update-info', () => {
+  return { currentVersion: CURRENT_VERSION, update: updateAvailable };
+});
+
+ipcMain.on('do-update', () => {
+  // Run npm install -g breathe-a-min in background, then restart
+  const { exec } = require('child_process');
+  exec('npm install -g breathe-a-min', (err) => {
+    if (!err) {
+      app.relaunch();
+      app.exit(0);
+    }
+  });
+});
+
 // ── App Ready ──
 app.whenReady().then(() => {
   if (process.platform === 'darwin') app.dock.hide();
   createTray();
   getGeo();
   registerShortcut();
+  checkForUpdates();
+  // Check again every 6 hours
+  setInterval(checkForUpdates, 6 * 60 * 60 * 1000);
 
   if (isFirstLaunch()) {
     showOnboarding();

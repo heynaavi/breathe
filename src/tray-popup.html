@@ -39,6 +39,28 @@
       letter-spacing: 0.08em; cursor: pointer; transition: color 0.2s ease;
     }
     .quit-btn:hover { color: rgba(255,255,255,0.5); }
+    .version-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 0.3rem; padding: 0 0.1rem;
+    }
+    .version-text {
+      font-size: 0.55rem; color: rgba(255,255,255,0.2);
+      letter-spacing: 0.05em;
+    }
+    .update-btn {
+      background: none; border: 1px solid rgba(136, 180, 168, 0.4);
+      color: rgba(136, 180, 168, 0.8); font-size: 0.55rem; font-weight: 400;
+      letter-spacing: 0.05em; padding: 0.2rem 0.5rem; border-radius: 4px;
+      cursor: pointer; transition: border-color 0.2s ease, color 0.2s ease;
+      display: none;
+    }
+    .update-btn:hover { border-color: rgba(136, 180, 168, 0.7); color: rgba(136, 180, 168, 1); }
+    .update-btn.visible { display: inline-block; }
+    .update-dot {
+      display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+      background: rgba(136, 180, 168, 0.7); margin-left: 0.3rem;
+      vertical-align: middle;
+    }
     .volume-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
     .volume-label { font-size: 0.65rem; color: rgba(255,255,255,0.4); width: 2.5rem; }
     .volume-slider {
@@ -107,6 +129,10 @@
   <div class="shortcut-hint" id="shortcutHint"></div>
   <button class="breath-btn" onclick="startBreath()">Take a breath</button>
   <button class="quit-btn" onclick="quitApp()">Quit</button>
+  <div class="version-row">
+    <span class="version-text" id="versionText"></span>
+    <button class="update-btn" id="updateBtn" onclick="doUpdate()">update</button>
+  </div>
 </div>
 <script>
   const { ipcRenderer } = require('electron');
@@ -221,6 +247,31 @@
 
   function startBreath() { ipcRenderer.send('start-experience'); }
   function quitApp() { ipcRenderer.send('quit-app'); }
+
+  // ── Version & updates ──
+  const versionText = document.getElementById('versionText');
+  const updateBtn = document.getElementById('updateBtn');
+
+  ipcRenderer.on('init-version', (_, info) => {
+    versionText.textContent = `v${info.currentVersion}`;
+    if (info.update) showUpdateAvailable(info.update);
+  });
+
+  ipcRenderer.on('update-available', (_, update) => {
+    showUpdateAvailable(update);
+  });
+
+  function showUpdateAvailable(update) {
+    versionText.innerHTML = `v${update.version} available<span class="update-dot"></span>`;
+    updateBtn.classList.add('visible');
+  }
+
+  function doUpdate() {
+    updateBtn.textContent = 'updating…';
+    updateBtn.style.pointerEvents = 'none';
+    updateBtn.style.opacity = '0.5';
+    ipcRenderer.send('do-update');
+  }
 
   // ↑↑↓↓←→←→BA
   const konami = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
