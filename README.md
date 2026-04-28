@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/heynaavi/breathe/releases/latest">Download</a> ·
-  <a href="https://www.npmjs.com/package/breathe">npm</a> ·
+  <a href="https://www.npmjs.com/package/breathe-a-min">npm</a> ·
   <a href="#how-it-works">How it works</a>
 </p>
 
@@ -20,7 +20,7 @@
 ### Install
 
 ```bash
-npm install -g breathe
+npm install -g breathe-a-min
 ```
 
 Or [download the latest release](https://github.com/heynaavi/breathe/releases/latest) directly.
@@ -87,8 +87,8 @@ npm run build:all      # Both
 ### Release
 
 ```bash
-npm run release patch  # 1.0.0 → 1.0.1
-npm run release minor  # 1.0.0 → 1.1.0
+npm run release patch  # 1.0.1 → 1.0.2
+npm run release minor  # 1.0.1 → 1.1.0
 ```
 
 Bumps version, commits, tags, builds, creates GitHub Release, and npm auto-publishes via CI.

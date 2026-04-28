@@ -14,7 +14,7 @@ const INSTALL_DIR = path.join(os.homedir(), '.breathe');
 
 function fail(msg) {
   console.error(`\n  \x1b[31m✗\x1b[0m  ${msg}`);
-  console.error(`     Run: npm install -g breathe\n`);
+  console.error(`     Run: npm install -g breathe-a-min\n`);
   process.exit(1);
 }
 
