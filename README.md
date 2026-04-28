@@ -1,99 +1,124 @@
-# Breathe
+<p align="center">
+  <img src="assets/icons/logo.png" width="120" alt="Breathe" />
+</p>
 
-A 60-second ambient sound bath for your mind. Lives in your menu bar, takes over your screen, and gives you one minute of calm.
+<h3 align="center">Breathe</h3>
 
-Inspired by [Still](https://stillapp.net/).
+<p align="center">
+  A 60-second sound bath for your mind.<br/>
+  <sub>Lives in your menu bar. Takes over your screen. Gives you one minute of calm.</sub>
+</p>
+
+<p align="center">
+  <a href="https://github.com/heynaavi/breathe/releases/latest">Download</a> ·
+  <a href="https://www.npmjs.com/package/breathe">npm</a> ·
+  <a href="#how-it-works">How it works</a>
+</p>
 
 ---
 
-## What it does
+### Install
 
-Click the tray icon → screen fades to black → guided text sequence → ambient audio plays → you close your eyes for a minute → done.
+```bash
+npm install -g breathe
+```
 
-The whole experience is a fullscreen overlay. No new windows, no switching spaces. It appears on top of whatever you're doing and fades away when it's over.
+Or [download the latest release](https://github.com/heynaavi/breathe/releases/latest) directly.
 
-### The flow
+---
 
-1. "Stop your thoughts for 60 seconds"
+### How it works
+
+Click the menu bar icon. Your screen fades to black.
+
+</text>
+</invoke>
+1. *"Stop your thoughts for 60 seconds"*
 2. Click **Begin**
-3. "For a better experience, use headphones"
-4. "Take a deep breath"
-5. "Close your eyes"
-6. Ambient audio plays (random pick from 6 tracks)
+3. *"For a better experience, use headphones"*
+4. *"Take a deep breath"*
+5. *"Close your eyes"*
+6. Ambient audio plays — a random track each time
 7. Timer counts down
-8. "Welcome back" → "Did it slow down?" → feedback
-9. "See you soon" → fade out
+8. *"Welcome back"* — quick feedback — *"See you soon"*
 
-### Tray menu
+The whole experience is a fullscreen overlay. No windows, no switching spaces. It appears on top of everything and fades away when it's over.
 
-Click the menu bar icon to see your personal stats and start a session.
+Press `Esc` anytime to exit.
+
+---
+
+### Menu bar
+
+<sub>Your personal stats live in the tray popup.</sub>
 
 - Minutes of calm
 - Times it helped
-- Take a breath button
-
-### Onboarding
-
-First launch shows a minimal intro — logo appears, animates to the tray, and a toast says "I live here now."
+- Start a session
 
 ---
 
-## Setup
+### Platforms
+
+| | Platform | File |
+|---|----------|------|
+| 🍎 | macOS (Apple Silicon) | `.dmg` |
+| 🪟 | Windows | `.exe` (portable) |
+
+---
+
+### Development
 
 ```bash
+git clone https://github.com/heynaavi/breathe.git
+cd breathe
 npm install
 npm start
 ```
 
-## Build
+### Build
 
 ```bash
-npm run build        # macOS DMG
-npm run build:win    # Windows
-npm run build:all    # Both
+npm run build          # macOS
+npm run build:win      # Windows
+npm run build:all      # Both
 ```
+
+### Release
+
+```bash
+npm run release patch  # 1.0.0 → 1.0.1
+npm run release minor  # 1.0.0 → 1.1.0
+```
+
+Bumps version, commits, tags, builds, creates GitHub Release, and npm auto-publishes via CI.
 
 ---
 
-## Project structure
+### Project structure
 
 ```
 breathe/
-├── main.js                  # Electron main process
+├── main.js              # Electron main process
 ├── src/
-│   ├── experience.html      # Fullscreen overlay UI
-│   ├── experience.js        # Experience logic + animations
-│   ├── preload.js           # Context bridge
-│   ├── tray-popup.html      # Custom tray menu with insights
-│   └── onboarding.html      # First-launch experience
+│   ├── experience.html  # Fullscreen overlay
+│   ├── experience.js    # Session logic + animations
+│   ├── preload.js       # Context bridge
+│   ├── tray-popup.html  # Menu bar popup
+│   └── onboarding.html  # First-launch experience
 ├── assets/
-│   ├── audio/               # 6 ambient sound files (~1 min each)
-│   └── icons/               # App logo + tray icon
-├── admin/
-│   └── dashboard.html       # Analytics portal (local only, not shipped)
-├── build/
-│   └── entitlements.mac.plist
-└── package.json
+│   ├── audio/           # Ambient tracks (~1 min each)
+│   └── icons/           # App + tray icons
+├── scripts/
+│   ├── release.js       # One-command release
+│   ├── postinstall.js   # npm postinstall wrapper
+│   └── install-binary.js # Binary downloader
+└── bin/
+    └── breathe.js       # CLI launcher
 ```
 
 ---
 
-## Audio
-
-Place `.mp3`, `.wav`, `.ogg`, or `.m4a` files in `assets/audio/`. The app picks one at random each session. Experience ends when the audio finishes naturally.
-
-## Analytics
-
-Session data is logged to Supabase:
-
-- `device_id` — anonymous UUID per machine
-- `helped` — user feedback (yes/no)
-- `audio_file` — which track played
-- `duration_seconds` — audio length
-- `country_code`, `region_code` — from IP geolocation
-
-Open `admin/dashboard.html` in a browser to view analytics. This file is gitignored and never shipped.
-
-## License
-
-MIT
+<p align="center">
+  <sub>Made by <a href="https://github.com/heynaavi">Naveen</a></sub>
+</p>
