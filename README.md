@@ -1,48 +1,46 @@
 <p align="center">
-  <img src="assets/icons/logo.png" width="120" alt="Breathe" />
+  <img src="assets/icons/logo.png" width="80" />
 </p>
 
-<h3 align="center">Breathe</h3>
-
-<p align="center">
-  A 60-second sound bath for your mind.<br/>
-  <sub>Lives in your menu bar. Takes over your screen. Gives you one minute of calm.</sub>
-</p>
+<h1 align="center">Breathe</h1>
 
 <p align="center">
-  <a href="https://github.com/heynaavi/breathe/releases/latest">Download</a> ·
-  <a href="https://www.npmjs.com/package/breathe-a-min">npm</a> ·
-  <a href="#how-it-works">How it works</a>
+  <sub>a 60-second sound bath for your mind</sub>
 </p>
+
+<p align="center">
+  <a href="https://github.com/heynaavi/breathe/releases/latest"><img src="https://img.shields.io/github/v/release/heynaavi/breathe?style=flat-square&color=88b4a8" /></a>
+  <a href="https://www.npmjs.com/package/breathe-a-min"><img src="https://img.shields.io/npm/v/breathe-a-min?style=flat-square&color=88b4a8" /></a>
+  <img src="https://img.shields.io/badge/macOS%20·%20Windows-grey?style=flat-square" />
+  <img src="https://img.shields.io/github/license/heynaavi/breathe?style=flat-square" />
+</p>
+
+<br>
+
+Your screen fades to black. Ambient audio fills your headphones. For one minute, everything stops.
 
 ---
 
 ### Install
 
 ```bash
-npm install -g breathe-a-min
+npm install -g breathe-a-min && breathe-a-min
 ```
 
-Or [download the latest release](https://github.com/heynaavi/breathe/releases/latest) directly.
+Or grab the app → [macOS `.dmg`](https://github.com/heynaavi/breathe/releases/latest) · [Windows `.exe`](https://github.com/heynaavi/breathe/releases/latest)
 
 ---
 
 ### How it works
 
-Click the menu bar icon. Your screen fades to black.
+Click the menu bar icon. The rest happens on its own.
 
-</text>
-</invoke>
-1. *"Stop your thoughts for 60 seconds"*
-2. Click **Begin**
-3. *"For a better experience, use headphones"*
-4. *"Take a deep breath"*
-5. *"Close your eyes"*
-6. Ambient audio plays — a random track each time
-7. Timer counts down
-8. *"Welcome back"* — quick feedback — *"See you soon"*
-
-The whole experience is a fullscreen overlay. No windows, no switching spaces. It appears on top of everything and fades away when it's over.
+| | |
+|:--|:--|
+| 🌑 **Fade** | Screen goes dark. The world disappears. |
+| 🎧 **Sound** | A random ambient track plays. Headphones recommended. |
+| 🧘 **Breathe** | Close your eyes. One minute. That's it. |
+| 🫧 **Return** | "Welcome back." Quick feedback. Fade out. |
 
 Press `Esc` anytime to exit.
 
@@ -50,48 +48,28 @@ Press `Esc` anytime to exit.
 
 ### Menu bar
 
-<sub>Your personal stats live in the tray popup.</sub>
+</text>
+</invoke>
+Your stats live in the tray popup — minutes of calm, sessions completed, and a button to start.
 
-- Minutes of calm
-- Times it helped
-- Start a session
-
----
-
-### Platforms
-
-| | Platform | File |
-|---|----------|------|
-| 🍎 | macOS (Apple Silicon) | `.dmg` |
-| 🪟 | Windows | `.exe` (portable) |
+| | |
+|:--|:--|
+| ◉ **Sessions** | How many times you've paused |
+| ◉ **Minutes** | Total time spent breathing |
+| ◉ **Helped** | Times it actually slowed you down |
 
 ---
 
-### Development
+### Build from source
 
 ```bash
 git clone https://github.com/heynaavi/breathe.git
-cd breathe
-npm install
-npm start
+cd breathe && npm install && npm start
 ```
 
-### Build
+Package: `npm run build` (macOS) · `npm run build:win` (Windows) · `npm run build:all` (both)
 
-```bash
-npm run build          # macOS
-npm run build:win      # Windows
-npm run build:all      # Both
-```
-
-### Release
-
-```bash
-npm run release patch  # 1.0.1 → 1.0.2
-npm run release minor  # 1.0.1 → 1.1.0
-```
-
-Bumps version, commits, tags, builds, creates GitHub Release, and npm auto-publishes via CI.
+Release: `npm run release patch` — bumps version, builds, pushes to GitHub + npm in one command.
 
 ---
 
@@ -112,7 +90,7 @@ breathe/
 ├── scripts/
 │   ├── release.js       # One-command release
 │   ├── postinstall.js   # npm postinstall wrapper
-│   └── install-binary.js # Binary downloader
+│   └── install-binary.js
 └── bin/
     └── breathe.js       # CLI launcher
 ```
@@ -120,5 +98,7 @@ breathe/
 ---
 
 <p align="center">
-  <sub>Made by <a href="https://github.com/heynaavi">Naveen</a></sub>
+  Inspired by <a href="https://stillapp.net/">Still</a>
+  <br>
+  <sub>MIT · take a breath 🫧</sub>
 </p>
