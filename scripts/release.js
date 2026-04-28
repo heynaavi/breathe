@@ -207,7 +207,13 @@ async function main() {
     step('building app');
     info('this may take a few minutes...');
     console.log('');
-    run('npx electron-builder --mac dmg zip --win portable --x64');
+    // Clean dist to avoid uploading stale assets
+    const distDir = path.join(__dirname, '..', 'dist');
+    if (fs.existsSync(distDir)) {
+      fs.rmSync(distDir, { recursive: true, force: true });
+    }
+    run('npx electron-builder --mac dmg zip');
+    run('npx electron-builder --win portable --x64');
     console.log('');
     done('build complete');
   }
