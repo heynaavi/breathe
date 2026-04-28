@@ -29,6 +29,3 @@ out/
 
 # Admin dashboard (local only, has API keys)
 admin/
-
-# Blueprint (reference only)
-DESKTOP_APP_BLUEPRINT.md
