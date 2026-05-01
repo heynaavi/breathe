@@ -35,3 +35,6 @@ DESKTOP_APP_BLUEPRINT.md
 
 # Supabase local
 supabase/
+
+# Environment variables (credentials embedded at build time)
+.env

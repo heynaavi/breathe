@@ -212,6 +212,21 @@ async function main() {
     if (fs.existsSync(distDir)) {
       fs.rmSync(distDir, { recursive: true, force: true });
     }
+    
+    // Load .env and inject credentials into build environment
+    const envPath = path.join(__dirname, '..', '.env');
+    if (fs.existsSync(envPath)) {
+      const envContent = fs.readFileSync(envPath, 'utf8');
+      envContent.split('\n').forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith('#')) {
+          const [key, ...valueParts] = trimmed.split('=');
+          const value = valueParts.join('=').trim();
+          if (key && value) process.env[key.trim()] = value;
+        }
+      });
+    }
+    
     run('npx electron-builder --mac dmg zip');
     run('npx electron-builder --win portable --x64');
     console.log('');

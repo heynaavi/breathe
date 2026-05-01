@@ -2,6 +2,26 @@ const { app, BrowserWindow, ipcMain, screen, Tray, nativeImage, globalShortcut }
 const path = require('path');
 const fs = require('fs');
 
+// Load .env in development only (credentials embedded at build time for production)
+if (!app.isPackaged) {
+  try {
+    const envPath = path.join(__dirname, '.env');
+    if (fs.existsSync(envPath)) {
+      const envContent = fs.readFileSync(envPath, 'utf8');
+      envContent.split('\n').forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith('#')) {
+          const [key, ...valueParts] = trimmed.split('=');
+          const value = valueParts.join('=').trim();
+          if (key && value && !process.env[key.trim()]) {
+            process.env[key.trim()] = value;
+          }
+        }
+      });
+    }
+  } catch (_) {}
+}
+
 // ── Single instance ──
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) { app.quit(); }
@@ -11,9 +31,9 @@ let experienceWindow = null;
 let trayPopup = null;
 let onboardingWindow = null;
 
-// Supabase anon key — safe to be public, RLS policies control access
-const SUPABASE_URL = 'https://uusdrkboviwobxxgzrkl.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1c2Rya2Jvdml3b2J4eGd6cmtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyOTExNzksImV4cCI6MjA5Mjg2NzE3OX0.dx4ZeiQ1sTWq1vmRuddiVp0y9laeIDJLHCoSiOeiXg8';
+// Supabase credentials — loaded from env vars (set in .env for dev, embedded at build time)
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
 // ── App paths helper ──
 function getAssetPath(...parts) {
