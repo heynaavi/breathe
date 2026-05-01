@@ -245,23 +245,26 @@ ipcMain.on('send-feedback', async (_, data) => {
   if (helped) stats.helpedCount++;
   saveStats(stats);
 
-  fetch(`${SUPABASE_URL}/functions/v1/log-session`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
-    },
-    body: JSON.stringify({
-      device_id: deviceId,
-      helped,
-      audio_file: audioFile || null,
-      duration_seconds: durationSeconds || null,
-      country_code: geo.country,
-      region_code: geo.region,
-    }),
-  }).then(res => {
-    if (!res.ok) console.error('[Edge Function] Insert failed:', res.status);
-  }).catch(err => console.error('[Edge Function] Network error:', err.message));
+  // Only send analytics if Supabase credentials are configured
+  if (SUPABASE_URL && SUPABASE_KEY) {
+    fetch(`${SUPABASE_URL}/functions/v1/log-session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+      },
+      body: JSON.stringify({
+        device_id: deviceId,
+        helped,
+        audio_file: audioFile || null,
+        duration_seconds: durationSeconds || null,
+        country_code: geo.country,
+        region_code: geo.region,
+      }),
+    }).then(res => {
+      if (!res.ok) console.error('[Edge Function] Insert failed:', res.status);
+    }).catch(err => console.error('[Edge Function] Network error:', err.message));
+  }
 });
 
 ipcMain.handle('get-stats', () => loadStats());

@@ -89,6 +89,25 @@ Release: `npm run release patch` — bumps version, builds, pushes to GitHub + n
 
 ---
 
+### Analytics (Optional)
+
+Breathe collects anonymous session metrics (total sessions, duration, helped count) to improve the experience. This requires a Supabase backend.
+
+**To enable analytics for your own build:**
+
+1. Create a [Supabase](https://supabase.com) project
+2. Set up an edge function to receive session data (`POST /functions/v1/log-session`)
+3. Create a `.env` file in the project root:
+
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your-anon-key
+```
+
+The app works fully without analytics — all features remain functional. Session stats are stored locally regardless.
+
+---
+
 ### Project structure
 
 ```
